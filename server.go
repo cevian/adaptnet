@@ -3,35 +3,57 @@ package adaptnet
 import (
 	"crypto/rand"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/cevian/adaptnet/netchan"
 )
 
+type MemoizeMap map[int][]byte
+
+func NewMemoizeMap() MemoizeMap {
+	return make(map[int][]byte)
+}
+
+func (t *MemoizeMap) Get(size int) []byte {
+	b, ok := (*t)[size]
+	if !ok {
+		b = make([]byte, size)
+		rand.Read(b)
+		(*t)[size] = b
+	}
+	return b
+}
+
 type ServerOp struct {
-	addr string
+	addr           string
+	numConnections int
 }
 
-func NewServerOp(addr string) *ServerOp {
-	return &ServerOp{addr}
+func NewServerOp(addr string, numConnections int) *ServerOp {
+	return &ServerOp{addr, numConnections}
 }
 
-func handleConnection(cp netchan.ChannelProcessor) {
+func handleConnection(cp netchan.ChannelProcessor, syncCh chan bool, connNo int) {
 	reader := cp.ChannelReader().(*netchan.ByteReader).Channel()
 	writer := cp.ChannelWriter().(*netchan.ByteWriter).Channel()
 	defer close(writer)
 
-	fmt.Println("Server Getting")
-	rb := <-reader
-	r := &Request{}
-	err := DeserializeObject(r, rb)
-	if err != nil {
-		panic(err)
-	}
+	mm := NewMemoizeMap()
+	<-syncCh
+	//fmt.Println("Server Getting")
+	for rb := range reader {
+		r := &Request{}
+		err := DeserializeObject(r, rb)
+		if err != nil {
+			panic(err)
+		}
 
-	resp := make([]byte, r.NumBytes)
-	rand.Read(resp)
-	fmt.Println("Server Sending")
-	writer <- resp
+		start := time.Now()
+		resp := mm.Get(int(r.NumBytes))
+		fmt.Println("Server Sending", connNo, time.Since(start))
+		writer <- resp
+	}
 }
 
 func (t *ServerOp) Run() error {
@@ -45,11 +67,21 @@ func (t *ServerOp) Run() error {
 	defer server.Close()
 
 	newConnCh := server.NewConnChannel()
+	syncCh := make(chan bool, 0)
 
-	fmt.Println("Waiting Conn")
-	cp := <-newConnCh
-	fmt.Println("Launching Conn")
-	handleConnection(cp)
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
+	for i := 0; i < t.numConnections; i++ {
+		cp := <-newConnCh
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			handleConnection(cp, syncCh, i)
+		}()
+	}
+	close(syncCh)
+	fmt.Println("Done getting connections")
 
 	return nil
 }
