@@ -41,7 +41,7 @@ func handleConnection(cp netchan.ChannelProcessor, syncCh chan bool, connNo int)
 
 	mm := NewMemoizeMap()
 	<-syncCh
-	//fmt.Println("Server Getting")
+	fmt.Println("Server Started", connNo)
 	for rb := range reader {
 		r := &Request{}
 		err := DeserializeObject(r, rb)
@@ -74,10 +74,11 @@ func (t *ServerOp) Run() error {
 
 	for i := 0; i < t.numConnections; i++ {
 		cp := <-newConnCh
+		connNo := i
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			handleConnection(cp, syncCh, i)
+			handleConnection(cp, syncCh, connNo)
 		}()
 	}
 	close(syncCh)
