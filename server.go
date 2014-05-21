@@ -9,7 +9,7 @@ import (
 	"github.com/cevian/adaptnet/netchan"
 )
 
-type MemoizeMap map[int][]byte
+/*type MemoizeMap map[int][]byte
 
 func NewMemoizeMap() MemoizeMap {
 	return make(map[int][]byte)
@@ -23,23 +23,41 @@ func (t *MemoizeMap) Get(size int) []byte {
 		(*t)[size] = b
 	}
 	return b
+}*/
+
+type PayloadGen struct {
+	basis []byte
+}
+
+func NewPayloadGen(max_size int) *PayloadGen {
+	b := make([]byte, max_size)
+	rand.Read(b)
+	return &PayloadGen{b}
+}
+
+func (t *PayloadGen) Get(size int) []byte {
+	if size > len(t.basis) {
+		panic("size above maxsize")
+	}
+	b := t.basis[:size]
+	return b
 }
 
 type ServerOp struct {
 	addr           string
 	numConnections int
+	maxPayload     int
 }
 
-func NewServerOp(addr string, numConnections int) *ServerOp {
-	return &ServerOp{addr, numConnections}
+func NewServerOp(addr string, numConnections int, maxPayload int) *ServerOp {
+	return &ServerOp{addr, numConnections, maxPayload}
 }
 
-func handleConnection(cp netchan.ChannelProcessor, syncCh chan bool, connNo int) {
+func handleConnection(cp netchan.ChannelProcessor, syncCh chan bool, connNo int, pg *PayloadGen) {
 	reader := cp.ChannelReader().(*netchan.ByteReader).Channel()
 	writer := cp.ChannelWriter().(*netchan.ByteWriter).Channel()
 	defer close(writer)
 
-	mm := NewMemoizeMap()
 	<-syncCh
 	fmt.Println("Server Started", connNo)
 	for rb := range reader {
@@ -50,7 +68,7 @@ func handleConnection(cp netchan.ChannelProcessor, syncCh chan bool, connNo int)
 		}
 
 		start := time.Now()
-		resp := mm.Get(int(r.NumBytes))
+		resp := pg.Get(int(r.NumBytes))
 		fmt.Println("Server Sending", connNo, time.Since(start))
 		writer <- resp
 	}
@@ -72,13 +90,14 @@ func (t *ServerOp) Run() error {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
+	pg := NewPayloadGen(t.maxPayload)
 	for i := 0; i < t.numConnections; i++ {
 		cp := <-newConnCh
 		connNo := i
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			handleConnection(cp, syncCh, connNo)
+			handleConnection(cp, syncCh, connNo, pg)
 		}()
 	}
 	close(syncCh)

@@ -26,7 +26,7 @@ func main() {
 	}
 
 	runnerServer := stream.NewRunner()
-	serverOp := adaptnet.NewServerOp(*addr, *numClients)
+	serverOp := adaptnet.NewServerOp(*addr, *numClients, *bitsPerChunk)
 	runnerServer.Add(serverOp)
 
 	runnerServer.AsyncRunAll()
