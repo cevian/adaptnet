@@ -21,12 +21,14 @@ func main() {
 
 	runner := stream.NewRunner()
 	for i := 0; i < *numClients; i++ {
-		clientOp := adaptnet.NewClientOp(*addr, *bitsPerChunk, *msBetweenChunks, *numChunks)
+		//clientOp := adaptnet.NewClientOp(*addr, *bitsPerChunk, *msBetweenChunks, *numChunks)
+		clientOp := adaptnet.NewClientDirectOp(*addr, *bitsPerChunk, *msBetweenChunks, *numChunks)
 		runner.Add(clientOp)
 	}
 
 	runnerServer := stream.NewRunner()
-	serverOp := adaptnet.NewServerOp(*addr, *numClients, *bitsPerChunk)
+	//serverOp := adaptnet.NewServerOp(*addr, *numClients, *bitsPerChunk)
+	serverOp := adaptnet.NewServerDirectOp(*addr, *numClients, *bitsPerChunk)
 	runnerServer.Add(serverOp)
 
 	runnerServer.AsyncRunAll()

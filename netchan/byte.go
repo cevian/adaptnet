@@ -89,6 +89,10 @@ func (t *ByteWriter) SetConn(c Conn) {
 	t.conn = c
 }
 
+func (t *ByteWriter) CloseConn() {
+	t.conn.Close()
+}
+
 func (t *ByteWriter) Run() error {
 	if t.conn == nil {
 		panic("Conn not set byte writer")
@@ -104,17 +108,25 @@ func (t *ByteWriter) Run() error {
 			return nil
 		}
 
-		err := binary.Write(t.conn, binary.LittleEndian, uint32(len(obj)))
+		err := t.WriteConnection(obj)
 		if err != nil {
-			fmt.Println("write length", err)
-			return err
-		}
-		_, err = t.conn.Write(obj)
-		if err != nil {
-			fmt.Println("write error", err)
 			return err
 		}
 	}
+}
+
+func (t *ByteWriter) WriteConnection(obj []byte) error {
+	err := binary.Write(t.conn, binary.LittleEndian, uint32(len(obj)))
+	if err != nil {
+		fmt.Println("write length", err)
+		return err
+	}
+	_, err = t.conn.Write(obj)
+	if err != nil {
+		fmt.Println("write error", err)
+		return err
+	}
+	return nil
 }
 
 func (t *ByteWriter) Channel() chan<- []byte {
@@ -154,19 +166,27 @@ func (t *ByteReader) Run() error {
 
 	for {
 
-		var length uint32
-		err := binary.Read(t.conn, binary.LittleEndian, &length)
-		if err != nil {
-			return t.readError(err)
-		}
-
-		b := make([]byte, length)
-		_, err = io.ReadFull(t.conn, b)
+		b, err := t.ReadConnection()
 		if err != nil {
 			return t.readError(err)
 		}
 		t.channel <- b
 	}
+}
+
+func (t *ByteReader) ReadConnection() ([]byte, error) {
+	var length uint32
+	err := binary.Read(t.conn, binary.LittleEndian, &length)
+	if err != nil {
+		return nil, err
+	}
+
+	b := make([]byte, length)
+	_, err = io.ReadFull(t.conn, b)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func (t *ByteReader) SetChannel(ch chan []byte) {

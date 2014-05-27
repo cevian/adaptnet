@@ -114,10 +114,11 @@ func (t *NetConn) Name() string {
 type Client struct {
 	addr      string
 	processor ChannelProcessor
+	AutoStart bool
 }
 
 func NewClient(addr string, processor ChannelProcessor) *Client {
-	return &Client{addr, processor}
+	return &Client{addr, processor, true}
 }
 
 func (t *Client) Connect() error {
@@ -129,7 +130,9 @@ func (t *Client) Connect() error {
 
 	c := NewNetConn(conn, "Client")
 	t.processor.SetConn(c)
-	t.processor.Start()
+	if t.AutoStart {
+		t.processor.Start()
+	}
 
 	return nil
 }
@@ -149,10 +152,11 @@ type Server struct {
 	listener       net.Listener
 	closing        bool
 	wg             *sync.WaitGroup
+	AutoStart      bool
 }
 
 func NewServer(addr string, gen ChannelProcessorGenerator) *Server {
-	return &Server{addr, gen, make(chan ChannelProcessor, 3), nil, false, &sync.WaitGroup{}}
+	return &Server{addr, gen, make(chan ChannelProcessor, 3), nil, false, &sync.WaitGroup{}, true}
 }
 
 func (t *Server) NewConnChannel() chan ChannelProcessor {
@@ -184,7 +188,9 @@ func (t *Server) Listen() error {
 			c := NewNetConn(conn, "Server")
 			cp.SetConn(c)
 			cp.SetWaitGroup(t.wg)
-			cp.Start()
+			if t.AutoStart {
+				cp.Start()
+			}
 			t.newConnChannel <- cp
 		}
 	}
