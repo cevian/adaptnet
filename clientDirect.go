@@ -22,7 +22,7 @@ func (t *ClientDirectOp) Run() error {
 	client, _, _ := netchan.NewByteClient(t.addr)
 	client.AutoStart = false
 
-	fmt.Println("Connecting")
+	fmt.Println("Starting bytesPerChunk", t.bytesPerChunk, "timeBetweenChunksMs", t.timeBetweenChunksMs, "numchunks", t.numChunks)
 	err := client.Connect()
 	reader := client.Processor().ChannelReader().(*netchan.ByteReader)
 	writer := client.Processor().ChannelWriter().(*netchan.ByteWriter)
@@ -61,8 +61,6 @@ func (t *ClientDirectOp) Run() error {
 		fmt.Printf("%d\t%E\t%E\t%E\n", t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
-
-	fmt.Println("Quiting")
 	return nil
 }
 
