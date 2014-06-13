@@ -21,8 +21,8 @@ func main() {
 
 	params := make([]adaptnet.ClientParam, 0)
 
-	sizes := []int{1000000, 100000, 10000}
-	pauses := []int{0, 300, 1000}
+	sizes := []int{100000000, 10000000, 1000000}
+	pauses := []int{0, 1000}
 
 	for i := 0; i < *numTests; i++ {
 		sizei := rand.Intn(len(sizes))

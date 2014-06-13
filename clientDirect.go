@@ -58,7 +58,7 @@ func (t *ClientDirectOp) Run() error {
 		tookSec := float64(float64(took) / float64(time.Second))
 		bandwidthBitsSec := float64(t.bytesPerChunk) / tookSec
 
-		fmt.Printf("%d\t%E\t%E\t%E\n", t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
+		fmt.Printf("%d\t%d\t%E\t%E\t%E\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
 	return nil
