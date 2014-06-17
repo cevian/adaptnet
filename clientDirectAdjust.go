@@ -63,7 +63,7 @@ func (t *ClientDirectAdjustOp) Run() error {
 		tookMs := float64(float64(took) / float64(time.Millisecond))
 		bandwidthBitsSec := float64(bytesPerChunk) / tookSec
 
-		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\n", t.timeBetweenChunksMs, bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024), tookInternal)
+		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\n", t.timeBetweenChunksMs, bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024), float64(tookInternal))
 
 		ratio := float64(t.targetLatencyMs) / tookMs
 		bytesPerChunk = int(float64(bytesPerChunk) * ratio)
