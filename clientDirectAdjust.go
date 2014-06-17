@@ -67,8 +67,8 @@ func (t *ClientDirectAdjustOp) Run() error {
 		bytesPerChunk = int(float64(bytesPerChunk) * ratio)
 
 		if bytesPerChunk <= 0 {
-			fmt.Printf("Warning Resetting Chunk Sise")
-			bytesPerChunkChunk = 10
+			fmt.Printf("Warning Resetting Chunk Size")
+			bytesPerChunk = 10
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
