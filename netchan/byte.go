@@ -206,7 +206,7 @@ func (t *ByteReader) ReadConnectionInto(b []byte) ([]byte, time.Time, error) {
 		return nil, start, err
 	}
 
-	if cap(b) > int(length) {
+	if cap(b) < int(length) {
 		b = make([]byte, length)
 	}
 	b = b[:length]
