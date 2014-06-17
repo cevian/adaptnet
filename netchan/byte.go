@@ -116,7 +116,7 @@ func (t *ByteWriter) Run() error {
 }
 
 func (t *ByteWriter) GetWriter(length_will_send int) (io.Writer, error) {
-	err := binary.Write(t.conn, binary.LittleEndian, length_will_send)
+	err := binary.Write(t.conn, binary.LittleEndian, uint32(length_will_send))
 	if err != nil {
 		fmt.Println("write length", err)
 		return nil, err
