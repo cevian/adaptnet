@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 )
 
 type ByteWriterCollection struct {
@@ -195,6 +196,26 @@ func (t *ByteReader) ReadConnection() ([]byte, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+func (t *ByteReader) ReadConnectionInto(b []byte) ([]byte, time.Time, error) {
+	var length uint32
+	err := binary.Read(t.conn, binary.LittleEndian, &length)
+	start := time.Now()
+	if err != nil {
+		return nil, start, err
+	}
+
+	if cap(b) > int(length) {
+		b = make([]byte, length)
+	}
+	b = b[:length]
+
+	_, err = io.ReadFull(t.conn, b)
+	if err != nil {
+		return nil, start, err
+	}
+	return b, start, nil
 }
 
 func (t *ByteReader) SetChannel(ch chan []byte) {
