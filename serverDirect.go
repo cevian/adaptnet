@@ -60,9 +60,16 @@ func handleDirectConnection(cp netchan.ChannelProcessor, syncCh chan bool, connN
 		}
 
 		start := time.Now()
-		resp := pg.Get(int(r.NumBytes))
-		fmt.Println("Server Sending On Connenction", connNo, " Time to generate: ", time.Since(start), "Time before request", request_pause)
-		err = writer.WriteConnection(resp)
+		//resp := pg.Get(int(r.NumBytes))
+		//fmt.Println("Server Sending On Connenction", connNo, " Time to generate: ", time.Since(start), "Time before request", request_pause)
+		//err = writer.WriteConnection(resp)
+		w, err := writer.GetWriter(int(r.NumBytes))
+		if err != nil {
+			panic(err)
+		}
+		pg.Write(w, int(r.NumBytes))
+		fmt.Println("Server Sending On Connenction", connNo, " Time to generate and send: ", time.Since(start), "Time before request", request_pause)
+
 		if err != nil {
 			panic(err)
 		}

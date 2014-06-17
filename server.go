@@ -3,6 +3,7 @@ package adaptnet
 import (
 	"crypto/rand"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -33,6 +34,24 @@ func NewPayloadGen(max_size int) *PayloadGen {
 	b := make([]byte, max_size)
 	rand.Read(b)
 	return &PayloadGen{b}
+}
+
+func (t *PayloadGen) Write(w io.Writer, size int) error {
+	count := 0
+	for count < size {
+		left := size - count
+		to_send := left
+		if to_send > len(t.basis) {
+			to_send = len(t.basis)
+		}
+		_, err := w.Write(t.basis[:to_send])
+		if err != nil {
+			panic(err)
+			return err
+		}
+		count += to_send
+	}
+	return nil
 }
 
 func (t *PayloadGen) Get(size int) []byte {

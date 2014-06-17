@@ -115,13 +115,21 @@ func (t *ByteWriter) Run() error {
 	}
 }
 
-func (t *ByteWriter) WriteConnection(obj []byte) error {
-	err := binary.Write(t.conn, binary.LittleEndian, uint32(len(obj)))
+func (t *ByteWriter) GetWriter(length_will_send int) (io.Writer, error) {
+	err := binary.Write(t.conn, binary.LittleEndian, length_will_send)
 	if err != nil {
 		fmt.Println("write length", err)
+		return nil, err
+	}
+	return t.conn, nil
+}
+
+func (t *ByteWriter) WriteConnection(obj []byte) error {
+	w, err := t.GetWriter(len(obj))
+	if err != nil {
 		return err
 	}
-	_, err = t.conn.Write(obj)
+	_, err = w.Write(obj)
 	if err != nil {
 		fmt.Println("write error", err)
 		return err
