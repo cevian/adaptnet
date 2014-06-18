@@ -33,6 +33,7 @@ func (t *ClientDirectOp) Run() error {
 		panic(err)
 	}
 
+	response := make([]byte, 100)
 	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
 		r := &Request{int32(t.bytesPerChunk)}
 		b, err := SerializeObject(r)
@@ -45,11 +46,13 @@ func (t *ClientDirectOp) Run() error {
 		}
 		start := time.Now()
 
-		response, err := reader.ReadConnection()
+		response, startInternal, err := reader.ReadConnectionInto(response)
+		//response, err := reader.ReadConnection()
 		if err != nil {
 			panic(err)
 		}
 		took := time.Since(start)
+		tookInternal := time.Since(startInternal)
 
 		if len(response) != t.bytesPerChunk {
 			panic("Wrong len")
@@ -58,7 +61,7 @@ func (t *ClientDirectOp) Run() error {
 		tookSec := float64(float64(took) / float64(time.Second))
 		bandwidthBitsSec := float64(t.bytesPerChunk) / tookSec
 
-		fmt.Printf("%d\t%d\t%E\t%E\t%E\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
+		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024), float64(tookInternal))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
 	return nil
