@@ -1,18 +1,20 @@
 #!/bin/bash
-PORT=3000
-if [ $# -gt 1  ]
-then
-  PORT=$2
-fi
+# arg1: name of exp
+# arg2: port 
+# rest passed to script
+EXPNAME=$1
+PORT=$2
+SERVERARGS="${@:3}"
+DATADIR=../data/$EXPNAME
 
-mkdir -p ../data/$1
-sudo modprobe tcp_probe port=3000 full=1
+mkdir -p $DATADIR
+sudo modprobe tcp_probe port=$PORT full=1
 sudo chmod 444 /proc/net/tcpprobe
-cat /proc/net/tcpprobe > ../data/$1/server.tcpprobe &
+cat /proc/net/tcpprobe > $DATADIR/server.tcpprobe &
 TCPCAP=$!
 #sudo tcpdump -i eth0 -w ../data/$1/tcpdump tcp and port 3000 &
 #TCPD=$!
-go run server.go -numClients 1 -maxPayload 100000000 -addr 0.0.0.0:$PORT 2>&1 | tee ../data/$1/server.out
+go run server.go -addr 0.0.0.0:$PORT $SERVERARGS 2>&1 | tee $DATADIR/server.out
 echo "Server pid is $!" 
 sudo kill $TCPCAP
 #sleep 10
