@@ -218,6 +218,34 @@ func (t *ByteReader) ReadConnectionInto(b []byte) ([]byte, time.Time, error) {
 	return b, start, nil
 }
 
+func (t *ByteReader) ReadConnectionIntoNoExpand(b []byte) (time.Time, int, error) {
+	var lengthU uint32
+	err := binary.Read(t.conn, binary.LittleEndian, &lengthU)
+	start := time.Now()
+	if err != nil {
+		return start, 0, err
+	}
+
+	length := int(lengthU)
+	lengthRead := 0
+	for lengthRead < length {
+		toRead := cap(b)
+		left := length - lengthRead
+		if left < toRead {
+			toRead = left
+		}
+
+		bufRound := b[:toRead]
+		_, err = io.ReadFull(t.conn, bufRound)
+		if err != nil {
+			return start, 0, err
+		}
+		lengthRead += len(b)
+	}
+
+	return start, length, nil
+}
+
 func (t *ByteReader) SetChannel(ch chan []byte) {
 	t.channel = ch
 	t.closeChannel = false

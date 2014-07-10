@@ -17,4 +17,4 @@ bash run_experiment_aws.bash $1.1000000.1000 1000000 1000
 sleep 10
 bash run_experiment_aws.bash $1.10000000.1000 10000000 1000
 sleep 10
-bash run_experiment_aws.bash $1.100000000.1000 100000000 1000
+:bash run_experiment_aws.bash $1.100000000.1000 100000000 1000
