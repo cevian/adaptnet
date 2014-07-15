@@ -36,25 +36,27 @@
 # Name of the traffic control command.
 TC=/sbin/tc
 # Rate to throttle to
-RATE=2.8mbps
+RATE=3.0mbps
 # Peak rate to allow
-PEAKRATE=3mbps
+PEAKRATE=3.5mbps
 # Interface to shape
 IF=eth0
 # Average to delay packets by
-#LATENCY=60ms
-LATENCY=3ms
+#LATENCY=100ms
+LATENCY=25ms
 # Jitter value for packet delay
 # Packets will be delayed by $LATENCY +/- $JITTER
-JITTER=1ms
+JITTER=0ms
 
 #buffer should be > RATE/HZ example  For 10mbit/s on Intel(1000HZ), you need at least 10kbyte buffer if you want to reach your configured rate
-BUFFER=5kb
-#MTU as found in ifconfig
-MTU=1500
+#on sns HZ seems to be 125 so for 3MB/s => 3MB/s/125 = 24 kb, double it to be sure
+BUFFER=60kb
+#MTU as found in ifconfig sns has offloading so you actually want to set this high like 65k
+MTU=65000
 #Modem q length http://broadband.mpi-sws.org/residential/07_imc_bb.pdf
+#amount of time packets can queue before being dropped.
 #MODEMQ=60ms
-MODEMQ=10ms
+MODEMQ=75ms
 
 
 start() {
