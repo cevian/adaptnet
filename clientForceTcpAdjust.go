@@ -33,12 +33,12 @@ func (t *ClientForceTcpAdjustOp) Run() error {
 
 	for chunkNo := 0; chunkNo < t.numChunksTotal; chunkNo++ {
 		wg := &sync.WaitGroup{}
-		wg.Add(len(css))
 		start := time.Now()
 		cssRun := css
 		if chunkNo < t.numChunksOneFlow {
 			cssRun = css[:1]
 		}
+		wg.Add(len(cssRun))
 		for _, cs := range cssRun {
 			cs_closure := cs
 			go func() {
@@ -52,7 +52,7 @@ func (t *ClientForceTcpAdjustOp) Run() error {
 		tookSec := float64(float64(took) / float64(time.Second))
 		bandwidthBitsSec := float64(t.bytesPerChunk*len(cssRun)) / tookSec
 
-		fmt.Printf("%d\t%d\t%d\t%E\t%E\t%E\n", len(css), t.timeBetweenChunksMs, t.bytesPerChunk*len(cssRun), float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
+		fmt.Printf("%d\t%d\t%d\t%E\t%E\t%E\n", len(cssRun), t.timeBetweenChunksMs, t.bytesPerChunk*len(cssRun), float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
 	return nil
