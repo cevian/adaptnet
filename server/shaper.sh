@@ -36,32 +36,42 @@
 # Name of the traffic control command.
 TC=/sbin/tc
 # Rate to throttle to
-RATE=3.0mbps
+RATE=3.2mbps
 # Peak rate to allow
-PEAKRATE=3.5mbps
+PEAKRATE=4.0mbps
 # Interface to shape
 IF=eth0
 # Average to delay packets by
 #LATENCY=100ms
-LATENCY=25ms
+LATENCY=30ms
 # Jitter value for packet delay
 # Packets will be delayed by $LATENCY +/- $JITTER
-JITTER=0ms
+JITTER=2ms
 
 #buffer should be > RATE/HZ example  For 10mbit/s on Intel(1000HZ), you need at least 10kbyte buffer if you want to reach your configured rate
 #on sns HZ seems to be 125 so for 3MB/s => 3MB/s/125 = 24 kb, double it to be sure
 BUFFER=60kb
 #MTU as found in ifconfig sns has offloading so you actually want to set this high like 65k
-MTU=65000
+MTU=2000
 #Modem q length http://broadband.mpi-sws.org/residential/07_imc_bb.pdf
 #amount of time packets can queue before being dropped.
 #MODEMQ=60ms
-MODEMQ=75ms
+MODEMQ=60ms
 
 
 start() {
-    $TC qdisc add dev $IF root handle 1:0 tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
-    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay $LATENCY $JITTER
+    #root prio creates classes 1:1, 1:2, and 1:3 (can't create just two bands, 1:3 will be unused)
+    $TC qdisc add dev $IF root handle 1: prio
+    #port 3000 sent to class 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3000 0xffff flowid 1:1
+    #all other traffic sent to class 1:2
+    $TC filter add dev $IF protocol ip parent 1: prio 2 u32 match ip src 0/0 flowid 1:2
+    
+    #attach shapings to class 1:1
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
+    $TC qdisc add dev $IF parent 10:1 handle 101: netem delay $LATENCY $JITTER
+#    $TC qdisc add dev $IF root handle 1:0 netem delay $LATENCY $JITTER
+#    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
 }
 
 stop() {
