@@ -33,8 +33,22 @@
 #  Taken from URL: http://www.topwebhosts.org/tools/traffic-control.php
 #
 
+# sns notes: 
+# 1) TCP (and other) segmentation offloading needs to be turned off.
+#    If it isn't then tc sees the huge non-segmented chunks and drops them if needed
+#    This cause many tcp packets in a row to be dropped and tcp detects this and goes back into slow-start
+#    This is unrealistic.
+#
+#    To turn off offloading: ethtool -K eth0 tso off; ethtool -K eth0 gro off; ethtool -K eth0 gso off 
+#    (not sure that gro and gso need to be disabled but just to be safe)
+# 2) Turning on shaping on eth0 in general on sns is dangerous since nfs also uses it. This can cause unexplained slowdown.
+#    Thus this script only shapes traffic for one port (PORT)
+
+
 # Name of the traffic control command.
 TC=/sbin/tc
+#egress port to shape
+PORT=3000
 # Rate to throttle to
 RATE=3.2mbps
 # Peak rate to allow
@@ -62,8 +76,8 @@ MODEMQ=60ms
 start() {
     #root prio creates classes 1:1, 1:2, and 1:3 (can't create just two bands, 1:3 will be unused)
     $TC qdisc add dev $IF root handle 1: prio
-    #port 3000 sent to class 1:1
-    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3000 0xffff flowid 1:1
+    #port PORT sent to class 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport $PORT 0xffff flowid 1:1
     #all other traffic sent to class 1:2
     $TC filter add dev $IF protocol ip parent 1: prio 2 u32 match ip src 0/0 flowid 1:2
     
@@ -76,7 +90,7 @@ start() {
 
 stop() {
     $TC qdisc del dev $IF root
-    $TC qdisc del dev $IF parent 1:1
+#    $TC qdisc del dev $IF parent 1:1
 }
 
 restart() {
