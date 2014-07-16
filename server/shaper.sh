@@ -50,17 +50,17 @@ TC=/sbin/tc
 #egress port to shape
 PORT=3000
 # Rate to throttle to
-RATE=3.2mbps
+RATE=1.6mbps
 # Peak rate to allow
-PEAKRATE=4.0mbps
+PEAKRATE=2mbps
 # Interface to shape
 IF=eth0
 # Average to delay packets by
 #LATENCY=100ms
-LATENCY=30ms
+LATENCY=100ms
 # Jitter value for packet delay
 # Packets will be delayed by $LATENCY +/- $JITTER
-JITTER=2ms
+JITTER=10ms
 
 #buffer should be > RATE/HZ example  For 10mbit/s on Intel(1000HZ), you need at least 10kbyte buffer if you want to reach your configured rate
 #on sns HZ seems to be 125 so for 3MB/s => 3MB/s/125 = 24 kb, double it to be sure

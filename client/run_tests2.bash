@@ -1,6 +1,6 @@
 #!/bin/bash
 EXEC="go run client.go"
-SLEEPTIME=240
+SLEEPTIME=10
 runint () {
 mkdir data/$1
 #(go run client.go -addr sns56.cs.princeton.edu:3001 -bitsPerChunk=100000000 -numChunks $5 -msBetweenChunks 0 2>&1| tee data/$1/client.int.out; echo "interference $(date)" )&
