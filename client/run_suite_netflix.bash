@@ -8,11 +8,12 @@ wait
 echo "finished"
 }
 
+SECONDS=4
 rates=(235 375 560 750 1050 1400 1750 2350 3600)
 
 for rate in ${rates[*]}
 do
-  ratebyte=$((rate*8*1000))
+  ratebyte=$((rate*$SECONDS*1000/8))
   runint $1.$ratebyte.0 $ratebyte 0 10
   runint $1.$ratebyte.1000 $ratebyte 1000 10
 done
