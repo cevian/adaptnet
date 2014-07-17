@@ -19,6 +19,6 @@ bash run_server_modprobe.bash $EXPNAME.100000.1000 $PORT -numClients 1
 bash run_server_modprobe.bash $EXPNAME.1000000.1000 $PORT -numClients 1
 bash run_server_modprobe.bash $EXPNAME.10000000.1000 $PORT -numClients 1
 bash run_server_modprobe.bash $EXPNAME.100000000.1000 $PORT -numClients 1
-cat ../data/$EXPNAME.10000*/client.out|grep -v "Start" > $EXPDIR/client.out
+cat ../data/$EXPNAME.*/client.out|grep -v "Start" > $EXPDIR/client.out
 #bash run_server_modprobe.bash $EXPNAME.1000000000.1000 $PORT -numClients 1
 

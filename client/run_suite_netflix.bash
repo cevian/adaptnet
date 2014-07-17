@@ -8,12 +8,13 @@ wait
 echo "finished"
 }
 
-SECONDS=4
+SECS_CHUNK=4
 rates=(235 375 560 750 1050 1400 1750 2350 3600)
 
 for rate in ${rates[*]}
 do
-  ratebyte=$((rate*$SECONDS*1000/8))
+  ratebyte=$(($rate*SECS_CHUNK*1000/8))
+  echo "rate =" $rate ", ratebyte=" $ratebyte 
   runint $1.$ratebyte.0 $ratebyte 0 10
   runint $1.$ratebyte.1000 $ratebyte 1000 10
 done
