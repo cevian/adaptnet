@@ -3,6 +3,7 @@ EXPNAME=$1
 PORT=$2
 CONGCONT=reno
 EXPDIR=../data/$EXPNAME
+echo "Using congestion control $CONGCONT"
 sudo sh -c "echo $CONGCONT > /proc/sys/net/ipv4/tcp_congestion_control"
 mkdir $EXPDIR
 cp shaper.sh $EXPDIR/shaper.sh

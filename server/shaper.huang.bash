@@ -64,7 +64,7 @@ JITTER=5ms
 
 #buffer should be > RATE/HZ example  For 10mbit/s on Intel(1000HZ), you need at least 10kbyte buffer if you want to reach your configured rate
 #on sns HZ seems to be 125 so for 3MB/s => 3MB/s/125 = 24 kb, double it to be sure
-BUFFER=60kb
+BUFFER=120kbit
 #MTU as found in ifconfig sns has offloading so you actually want to set this high like 65k
 MTU=2000
 #Modem q length http://broadband.mpi-sws.org/residential/07_imc_bb.pdf
@@ -84,7 +84,7 @@ start() {
     $TC filter add dev $IF protocol ip parent 1: prio 2 u32 match ip src 0/0 flowid 1:2
     
     #attach shapings to class 1:1
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER limit 120kbit peakrate $PEAKRATE mtu $MTU
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency 10ms peakrate $PEAKRATE mtu $MTU
     $TC qdisc add dev $IF parent 10:1 handle 101: netem delay $LATENCY $JITTER
 #    $TC qdisc add dev $IF root handle 1:0 netem delay $LATENCY $JITTER
 #    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
