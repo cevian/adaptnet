@@ -10,11 +10,11 @@ iptables -A INPUT -p tcp --dport 3001 -j ACCEPT
 iptables -A INPUT -p tcp --dport 3000 -j ACCEPT
 
 #iptables -t nat -A PREROUTING -p tcp --dport 3000 -i eth0 -j DNAT --to 128.112.7.149:3000
-iptables -t nat -A PREROUTING -p tcp -d 128.112.7.149 --dport 3000 -i eth0 -j DNAT --to-destination 192.168.1.106:3000
-iptables -A FORWARD -p tcp --dport 3000 -j ACCEPT
-iptables -A FORWARD -p tcp --sport 3000 -j ACCEPT
+iptables -t nat -A PREROUTING -p tcp -d 128.112.7.149 --dport 3000:3001 -i eth0 -j DNAT --to-destination 192.168.1.106:3000-3001
+iptables -A FORWARD -p tcp --dport 3000:3001 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 3000:3001 -j ACCEPT
 #iptables -t nat -A POSTROUTING -d 128.112.7.149 -s 128.112.7.0/24 -p tcp --dport 3000 -j SNAT --to 128.112.7.146
-iptables -t nat -A POSTROUTING -p tcp --dport 3000 -j MASQUERADE
+iptables -t nat -A POSTROUTING -p tcp --dport 3000:3001 -j MASQUERADE
 
 #Default policies
 iptables -P INPUT DROP
@@ -54,6 +54,7 @@ iptables -A INPUT -s 128.112.139.193 -j ACCEPT
 
 #List rules
 iptables -L -v
+iptables -L -v -t nat
 
 #Save settings
 #/etc/network/if-post-down.d/iptablessave

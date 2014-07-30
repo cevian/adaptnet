@@ -1,6 +1,6 @@
 #!/bin/bash
 EXEC="go run client.go"
-SLEEPTIME=10
+SLEEPTIME=20
 runint () {
 sleep $SLEEPTIME
 mkdir data/$1
@@ -10,7 +10,7 @@ echo "finished"
 }
 
 SECS_CHUNK=4
-rates=(2350)
+rates=(2350 3600)
 
 for rate in ${rates[*]}
 do

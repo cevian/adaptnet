@@ -21,5 +21,5 @@ do
   bash run_server_modprobe.bash $EXPNAME.$ratebyte.1000 $PORT -numClients 1
 done
 
-cat ../data/$EXPNAME.*/client.out|grep -v "Start" > $EXPDIR/client.out
+#cat ../data/$EXPNAME.*/client.out|grep -v "Start" > $EXPDIR/client.out
 

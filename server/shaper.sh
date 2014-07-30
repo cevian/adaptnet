@@ -63,7 +63,7 @@ RATE=2.5mbit
 # Peak rate to allow
 PEAKRATE=3mbit
 # Interface to shape
-IF=eth0
+IFS=(eth0 eth1)
 # Average to delay packets by
 #LATENCY=100ms
 LATENCY=100ms
@@ -73,79 +73,114 @@ JITTER=2ms
 
 #buffer should be > RATE/HZ example  For 10mbit/s on Intel(1000HZ), you need at least 10kbyte buffer if you want to reach your configured rate
 #on sns HZ seems to be 125 so for 3MB/s => 3MB/s/125 = 24 kb, double it to be sure
-BUFFER=60kb
+# for 2.5 mbit/s => 2.5 mbit/s/125 = 20kbit 
+BUFFER=60kbit
 #MTU as found in ifconfig sns has offloading so you actually want to set this high like 65k
 MTU=2000
 #Modem q length http://broadband.mpi-sws.org/residential/07_imc_bb.pdf
 #amount of time packets can queue before being dropped.
 #MODEMQ=60ms
-MODEMQ=60ms
+MODEMQ=0ms
 
 
-start() {
-    #root prio creates classes 1:1, 1:2, and 1:3 (can't create just two bands, 1:3 will be unused)
+startPre(){
     $TC qdisc add dev $IF root handle 1: prio
-    #port PORT sent to class 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport $PORT 0xffff flowid 1:1
-    #all other traffic sent to class 1:2
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3001 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip protocol 1 0xFF flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 2 u32 match ip src 0/0 flowid 1:2
-    
-    #attach shapings to class 1:1
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
-    $TC qdisc add dev $IF parent 10:1 handle 101: netem delay $LATENCY $JITTER
-#    $TC qdisc add dev $IF root handle 1:0 netem delay $LATENCY $JITTER
-#    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate $RATE burst $BUFFER latency $MODEMQ peakrate $PEAKRATE mtu $MTU
 }
+
+
+startCombine() {
+    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay 20ms 1ms rate 5mbit limit 10
+}
+
+startDelay() {
+    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay 20ms 1ms
+}
+
+startRateLimit() {
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 60kbit latency 800ms
+}
+
+
+
 
 stop() {
     $TC qdisc del dev $IF root
 #    $TC qdisc del dev $IF parent 1:1
 }
 
-restart() {
-    stop
-    sleep 1
-    start
-}
 
 show() {
+    $TC -r qdisc ls dev $IF
+    echo "--------------------"
     $TC -s qdisc ls dev $IF
 }
 
 case "$1" in
 
-start)
+startCombine)
 
-echo -n "Starting bandwidth shaping: "
-start
+echo -n "Starting combined (rate limit and latency) bandwidth shaping: "
+for IF in ${IFS[*]} 
+do
+  startPre
+  startCombine
+done
 echo "done"
 ;;
+
+startRateLimit)
+
+echo -n "Starting rate limit bandwidth shaping: "
+for IF in ${IFS[*]} 
+do
+  startPre
+  startRateLimit
+done
+echo "done"
+;;
+
+startDelay)
+
+echo -n "Starting latency shaping: "
+for IF in ${IFS[*]} 
+do
+  startPre
+  startDelay
+done
+echo "done"
+;;
+
+
 
 stop)
 
 echo -n "Stopping bandwidth shaping: "
-stop
-echo "done"
-;;
-
-restart)
-
-echo -n "Restarting bandwidth shaping: "
-restart
+for IF in ${IFS[*]} 
+do
+  stop
+  done
 echo "done"
 ;;
 
 show)
 
 echo "Bandwidth shaping status for $IF:"
-show
+for IF in ${IFS[*]} 
+do
+  echo "Interface $IF"
+  show
+  done
 echo ""
 ;;
 
 *)
 
 pwd=$(pwd)
-echo "Usage: shaper.sh {start|stop|restart|show}"
+echo "Usage: shaper.sh {startCombine|startDelay|startRateLimit|stop|show}"
 ;;
 
 esac 

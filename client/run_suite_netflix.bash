@@ -19,6 +19,8 @@ do
   runint $1.$ratebyte.1000 $ratebyte 1000 10
 done
 
+mkdir data/$1
+cat data/$1.*/client.out|grep -v "Start" > data/$1/client.out
 
 #235 kbps = 117500 byte chunks
 #runint $1.117500.0 117500 0 100
