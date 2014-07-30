@@ -1,0 +1,59 @@
+#!/bin/bash
+
+#Flush Rules
+iptables -F
+iptables -t nat -F
+
+#Allow SSH
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 3001 -j ACCEPT
+iptables -A INPUT -p tcp --dport 3000 -j ACCEPT
+
+#iptables -t nat -A PREROUTING -p tcp --dport 3000 -i eth0 -j DNAT --to 128.112.7.149:3000
+iptables -t nat -A PREROUTING -p tcp -d 128.112.7.149 --dport 3000 -i eth0 -j DNAT --to-destination 192.168.1.106:3000
+iptables -A FORWARD -p tcp --dport 3000 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 3000 -j ACCEPT
+#iptables -t nat -A POSTROUTING -d 128.112.7.149 -s 128.112.7.0/24 -p tcp --dport 3000 -j SNAT --to 128.112.7.146
+iptables -t nat -A POSTROUTING -p tcp --dport 3000 -j MASQUERADE
+
+#Default policies
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+#Access for localhost
+iptables -A INPUT -i lo -j ACCEPT
+
+#Acccept packets belonging to established and related connections
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+#Ping
+iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+
+#Adam/etc machines
+iptables -A INPUT -s adam.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s eve.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s lois.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s clark.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s bert.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s ernie.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s anthony.cs.princeton.edu -j ACCEPT
+iptables -A INPUT -s cleopatra.cs.princeton.edu -j ACCEPT
+
+#sns cluster
+iptables -A INPUT -m iprange --src-range 128.112.7.1-128.112.7.253 -j ACCEPT
+
+#penguins servers
+iptables -A INPUT -m iprange --src-range 128.112.155.165-128.112.155.166 -j ACCEPT
+
+#cycles servers
+iptables -A INPUT -m iprange --src-range 128.112.155.170-128.112.155.173 -j ACCEPT
+
+#csgate
+iptables -A INPUT -s 128.112.139.193 -j ACCEPT
+
+#List rules
+iptables -L -v
+
+#Save settings
+#/etc/network/if-post-down.d/iptablessave
