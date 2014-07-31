@@ -1,4 +1,10 @@
 #!/bin/bash
+usage() {
+echo "Usage: shaper.sh {startCombine|startDelay|startRateLimit|stop|show} interface1 interface2"
+}
+
+
+
 #
 #  shaper.sh
 #  ---------
@@ -63,7 +69,14 @@ RATE=2.5mbit
 # Peak rate to allow
 PEAKRATE=3mbit
 # Interface to shape
-IFS=(eth0 eth1)
+IFS=( "$2" "$3" )
+if [ ${#IFS[@]} -lt 1 ] 
+then 
+usage
+exit 1
+fi
+
+#IFS=(eth0 eth1)
 # Average to delay packets by
 #LATENCY=100ms
 LATENCY=100ms
@@ -101,10 +114,8 @@ startDelay() {
 }
 
 startRateLimit() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 60kbit latency 800ms
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 120kbit latency 800ms peakrate 6mbit mtu 2000
 }
-
-
 
 
 stop() {
@@ -180,7 +191,7 @@ echo ""
 *)
 
 pwd=$(pwd)
-echo "Usage: shaper.sh {startCombine|startDelay|startRateLimit|stop|show}"
+usage
 ;;
 
 esac 
