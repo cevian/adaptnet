@@ -16,7 +16,7 @@ do
   ratebyte=$(($rate*SECS_CHUNK*1000/8))
   echo "rate =" $rate ", ratebyte=" $ratebyte 
   runint $1.$ratebyte.0 $ratebyte 0 10
-  runint $1.$ratebyte.1000 $ratebyte 1000 10
+  runint $1.$ratebyte.5000 $ratebyte 5000 10
 done
 
 mkdir data/$1

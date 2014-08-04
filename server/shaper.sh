@@ -110,11 +110,11 @@ startCombine() {
 }
 
 startDelay() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay 20ms 1ms
+    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay ${LATENCY}ms ${JITTER}ms
 }
 
 startRateLimit() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 120kbit latency 800ms peakrate 6mbit mtu 2000
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2.5mbit burst 60kbit latency 800ms peakrate 3.2mbit mtu 2000
 }
 
 
@@ -155,8 +155,9 @@ echo "done"
 ;;
 
 startDelay)
-
-echo -n "Starting latency shaping: "
+LATENCY=${4:-800}
+JITTER=${5:-0}
+echo -n "Starting latency shaping (Latency=$LATENCY Jitter=$JITTER): "
 for IF in ${IFS[*]} 
 do
   startPre
