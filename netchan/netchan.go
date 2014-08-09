@@ -115,10 +115,11 @@ type Client struct {
 	addr      string
 	processor ChannelProcessor
 	AutoStart bool
+	NetConn   *NetConn
 }
 
 func NewClient(addr string, processor ChannelProcessor) *Client {
-	return &Client{addr, processor, true}
+	return &Client{addr, processor, true, nil}
 }
 
 func (t *Client) Connect() error {
@@ -133,6 +134,8 @@ func (t *Client) Connect() error {
 	if t.AutoStart {
 		t.processor.Start()
 	}
+
+	t.NetConn = (c.(*NetConn))
 
 	return nil
 }
