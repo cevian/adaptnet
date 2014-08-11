@@ -19,7 +19,7 @@ func NewClientDirectAdjustTcpInfoOp(addr string, timeBetweenChunksMs int, numChu
 	return &ClientDirectAdjustTcpInfoOp{addr, timeBetweenChunksMs, numChunks}
 }
 
-func GetTcpInfo(fd int, val *syscall.TCPInfo) (err error) {
+func GetTcpInfo(fd uintptr, val *syscall.TCPInfo) (err error) {
 
 	level := syscall.SOL_TCP
 	name := syscall.TCP_INFO
@@ -55,7 +55,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	fd := f.Fd()
 	var tcp_info syscall.TCPInfo
 	GetTcpInfo(fd, &tcp_info)
-	fmt.Println("tcp_info", tcp_info)
+	fmt.Printf("tcp_info %+v \n", tcp_info)
 
 	/*
 		//bytesPerChunk := 1000
