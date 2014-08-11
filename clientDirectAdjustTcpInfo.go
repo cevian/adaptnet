@@ -5,8 +5,6 @@ import (
 	"net"
 	"syscall"
 	"unsafe"
-
-	"github.com/cevian/adaptnet/netchan"
 )
 
 type ClientDirectAdjustTcpInfoOp struct {
@@ -34,19 +32,10 @@ func GetTcpInfo(fd uintptr, val *syscall.TCPInfo) (err error) {
 }
 
 func (t *ClientDirectAdjustTcpInfoOp) Run() error {
-	client, _, _ := netchan.NewByteClient(t.addr)
-	client.AutoStart = false
+	cs := NewChunkSender(t.addr)
+	defer cs.Close()
 
-	//fmt.Println("Starting bytesPerChunk", t.bytesPerChunk, "timeBetweenChunksMs", t.timeBetweenChunksMs, "numchunks", t.numChunks)
-	err := client.Connect()
-	//reader := client.Processor().ChannelReader().(*netchan.ByteReader)
-	writer := client.Processor().ChannelWriter().(*netchan.ByteWriter)
-	defer client.Wait()
-	defer writer.CloseConn()
-
-	if err != nil {
-		panic(err)
-	}
+	client := cs.Client()
 
 	f, err := client.NetConn.Conn.(*net.TCPConn).File()
 	if err != nil {
@@ -54,6 +43,11 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	}
 	fd := f.Fd()
 	var tcp_info syscall.TCPInfo
+	GetTcpInfo(fd, &tcp_info)
+	fmt.Printf("tcp_info %+v \n", tcp_info)
+
+	cs.MakeRequest(10000)
+
 	GetTcpInfo(fd, &tcp_info)
 	fmt.Printf("tcp_info %+v \n", tcp_info)
 

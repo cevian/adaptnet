@@ -28,6 +28,10 @@ func NewChunkSender(addr string) *ChunkSender {
 	return &ChunkSender{client, reader, writer, make([]byte, 100)}
 }
 
+func (t *ChunkSender) Client() *netchan.Client {
+	return t.client
+}
+
 func (t *ChunkSender) Close() {
 	t.client.Wait()
 	t.writer.CloseConn()
