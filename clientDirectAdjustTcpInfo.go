@@ -2,8 +2,10 @@ package adaptnet
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -31,6 +33,12 @@ func GetTcpInfo(fd uintptr, val *syscall.TCPInfo) (err error) {
 	return
 }
 
+func NumRttsToBdp(bdp float64) (rounds float64) {
+	startingByte := float64(1500 * 10)
+	rnds := math.Log2(bdp / startingByte)
+	return math.Ceil(rnds)
+}
+
 func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	cs := NewChunkSender(t.addr)
 	defer cs.Close()
@@ -46,10 +54,31 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	GetTcpInfo(fd, &tcp_info)
 	fmt.Printf("tcp_info %+v \n", tcp_info)
 
-	cs.MakeRequest(10000)
+	chunkSize := (235 * 1000 * 4) / 8
+	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
+		start := cs.MakeRequest(chunkSize)
 
-	GetTcpInfo(fd, &tcp_info)
-	fmt.Printf("tcp_info %+v \n", tcp_info)
+		took := time.Since(start)
+		tookSec := float64(float64(took) / float64(time.Second))
+		bandwidthBytesSec := float64(chunkSize) / tookSec
+
+		GetTcpInfo(fd, &tcp_info)
+		//fmt.Printf("tcp_info %+v \n", tcp_info)
+		rtt_us := float64(tcp_info.Rtt)
+
+		fmt.Printf("%d\t%d\t%E\t%E\t%E\n", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, (bandwidthBytesSec*8)/(1000))
+
+		multiplier := 2.0
+		bdp := multiplier * bandwidthBytesSec * rtt_us / 1000000
+		nrtb := NumRttsToBdp(bdp)
+
+		goal := 0.9
+		// numRounds * (1-goal) = nrtb
+		numRounds := nrtb / (1.0 - goal)
+
+		chunkSize = numRounds * bdp
+
+	}
 
 	/*
 		//bytesPerChunk := 1000
