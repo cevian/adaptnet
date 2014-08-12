@@ -76,11 +76,12 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		multiplier := 2.0
 		bdp := multiplier * bandwidthBytesSec * rtt_us / 1000000
-		nrtb := NumRttsToBdpNoSS(bdp)
+		nrtb := NumRttsToBdpAllSS(bdp)
+		numRounds_min := NumRttsToBdpNoSS(bdp)
 
 		goal := 0.9
 		// numRounds * (1-goal) = nrtb
-		numRounds := nrtb / (1.0 - goal)
+		numRounds := math.Max(nrtb/(1.0-goal), numRounds_min)
 
 		chunkSize = int(numRounds * bdp)
 		fmt.Println("bdp=", bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize)
