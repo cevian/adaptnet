@@ -22,7 +22,7 @@ do
     runint $1.$lat.$ratebyte.5000 $ratebyte 5000 10
   done
   mkdir data/$1.$lat
-  cat data/$1.$lat.*/client.out|grep -v "Start" > data/$1/client.out
+  cat data/$1.$lat.*/client.out|grep -v "Start" > data/$1.$lat/client.out
   sleep $SLEEPTIME
 done
 
