@@ -33,10 +33,16 @@ func GetTcpInfo(fd uintptr, val *syscall.TCPInfo) (err error) {
 	return
 }
 
-func NumRttsToBdp(bdp float64) (rounds float64) {
+func NumRttsToBdpAllSS(bdp float64) (rounds float64) {
 	startingByte := float64(1500 * 10)
 	rnds := math.Log2(bdp / startingByte)
-	return math.Ceil(rnds)+1.0
+	return math.Ceil(rnds) + 1.0
+}
+
+func NumRttsToBdpNoSS(bdp float64) (rounds float64) {
+	startingByte := float64(1500 * 10)
+	left := bdp - startingByte
+	return math.Ceil(left / 1500)
 }
 
 func (t *ClientDirectAdjustTcpInfoOp) Run() error {
@@ -70,16 +76,14 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		multiplier := 2.0
 		bdp := multiplier * bandwidthBytesSec * rtt_us / 1000000
-		nrtb := NumRttsToBdp(bdp)
- 
+		nrtb := NumRttsToBdpNoSS(bdp)
 
 		goal := 0.9
 		// numRounds * (1-goal) = nrtb
 		numRounds := nrtb / (1.0 - goal)
-		
 
-		chunkSize =int(numRounds * bdp)
-		fmt.Println("bdp=",bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize)
+		chunkSize = int(numRounds * bdp)
+		fmt.Println("bdp=", bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize)
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 
 	}
