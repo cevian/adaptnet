@@ -218,6 +218,7 @@ func ReadFull(r io.Reader, buf []byte, logEntryDuration time.Duration) (n int, r
 			rle.Time = dur
 			rl = append(rl, *rle)
 			rle = &RateLog{}
+			logStart = time.Now()
 		}
 	}
 	if n >= min {
