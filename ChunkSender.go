@@ -1,6 +1,7 @@
 package adaptnet
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cevian/adaptnet/netchan"
@@ -49,7 +50,13 @@ func (t *ChunkSender) MakeRequest(bytesPerChunk int) time.Time {
 	}
 	start := time.Now()
 
-	t.response, _, err = t.reader.ReadConnectionInto(t.response)
+	var rl []netchan.RateLog
+	t.response, _, rl, err = t.reader.ReadConnectionIntoWithLog(t.response, time.Second)
+
+	for _, rle := range rl {
+		fmt.Println("Bytes", rle.Bytes, "Duration", rle.Time, "Bandwidth (bits/sec)", float64(rle.Bytes*8)/(float64(rle.Time)/float64(time.Second)))
+	}
+
 	if err != nil {
 		panic(err)
 	}

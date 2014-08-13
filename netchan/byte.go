@@ -198,6 +198,56 @@ func (t *ByteReader) ReadConnection() ([]byte, error) {
 	return b, nil
 }
 
+type RateLog struct {
+	Bytes int
+	Time  time.Duration
+}
+
+func ReadFull(r io.Reader, buf []byte, logEntryDuration time.Duration) (n int, rl []RateLog, err error) {
+	min := len(buf)
+	rl = make([]RateLog, 0, 10)
+	logStart := time.Now()
+	rle := &RateLog{}
+	for n < min && err == nil {
+		var nn int
+		nn, err = r.Read(buf[n:])
+		n += nn
+		rle.Bytes += nn
+		dur := time.Since(logStart)
+		if dur > logEntryDuration || n >= min {
+			rle.Time = dur
+			rl = append(rl, *rle)
+			rle = &RateLog{}
+		}
+	}
+	if n >= min {
+		err = nil
+	} else if n > 0 && err == io.EOF {
+		err = io.ErrUnexpectedEOF
+	}
+	return
+}
+
+func (t *ByteReader) ReadConnectionIntoWithLog(b []byte, logEntryDuration time.Duration) ([]byte, time.Time, []RateLog, error) {
+	var length uint32
+	err := binary.Read(t.conn, binary.LittleEndian, &length)
+	start := time.Now()
+	if err != nil {
+		return nil, start, nil, err
+	}
+
+	if cap(b) < int(length) {
+		b = make([]byte, length)
+	}
+	b = b[:length]
+
+	_, rl, err := ReadFull(t.conn, b, logEntryDuration)
+	if err != nil {
+		return nil, start, rl, err
+	}
+	return b, start, rl, nil
+}
+
 func (t *ByteReader) ReadConnectionInto(b []byte) ([]byte, time.Time, error) {
 	var length uint32
 	err := binary.Read(t.conn, binary.LittleEndian, &length)
