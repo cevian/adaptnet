@@ -1,7 +1,6 @@
 package adaptnet
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cevian/adaptnet/netchan"
@@ -12,6 +11,7 @@ type ChunkSender struct {
 	reader   *netchan.ByteReader
 	writer   *netchan.ByteWriter
 	response []byte
+	RateLog  []netchan.RateLog
 }
 
 func NewChunkSender(addr string) *ChunkSender {
@@ -26,11 +26,24 @@ func NewChunkSender(addr string) *ChunkSender {
 	reader := client.Processor().ChannelReader().(*netchan.ByteReader)
 	writer := client.Processor().ChannelWriter().(*netchan.ByteWriter)
 
-	return &ChunkSender{client, reader, writer, make([]byte, 100)}
+	return &ChunkSender{client, reader, writer, make([]byte, 100), nil}
 }
 
 func (t *ChunkSender) Client() *netchan.Client {
 	return t.client
+}
+
+func (t *ChunkSender) MaxRateLogEntry() *netchan.RateLog {
+	var max *netchan.RateLog
+	maxRate := 0.0
+	for _, rle := range t.RateLog {
+		rate := float64(rle.Bytes) / float64(rle.Time)
+		if rate > maxRate {
+			max = &rle
+			maxRate = rate
+		}
+	}
+	return max
 }
 
 func (t *ChunkSender) Close() {
@@ -50,12 +63,12 @@ func (t *ChunkSender) MakeRequest(bytesPerChunk int) time.Time {
 	}
 	start := time.Now()
 
-	var rl []netchan.RateLog
-	t.response, _, rl, err = t.reader.ReadConnectionIntoWithLog(t.response, time.Second)
+	t.response, _, t.RateLog, err = t.reader.ReadConnectionIntoWithLog(t.response, time.Second)
 
-	for _, rle := range rl {
-		fmt.Println("Bytes", rle.Bytes, "Duration", rle.Time, "Bandwidth (bits/sec)", float64(rle.Bytes*8)/(float64(rle.Time)/float64(time.Second)))
-	}
+	/*
+		for _, rle := range t.RateLog {
+			fmt.Println("Bytes", rle.Bytes, "Duration", rle.Time, "Bandwidth (bits/sec)", float64(rle.Bytes*8)/(float64(rle.Time)/float64(time.Second)))
+		} */
 
 	if err != nil {
 		panic(err)
