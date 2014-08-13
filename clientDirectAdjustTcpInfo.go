@@ -45,6 +45,13 @@ func NumRttsToBdpNoSS(bdp float64) (rounds float64) {
 	return math.Ceil(left / 1500)
 }
 
+func NumRttsToBdp(ssthresh, bdp float64) (rounds float64) {
+	toSSthresh := NumRttsToBdpAllSS(ssthresh)
+	startingByte := math.Exp2(toSSthresh - 1.0)
+	left := bdp - startingByte
+	return math.Ceil(left/1500) + toSSthresh
+}
+
 func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	cs := NewChunkSender(t.addr)
 	defer cs.Close()
@@ -76,8 +83,13 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		multiplier := 2.0
 		bdp := multiplier * bandwidthBytesSec * rtt_us / 1000000
+
+		// BW = cwnd/rtt => rtt * BW = cwnd
+		avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
+		minSsthresh := avg_cwnd * 3 / 4
+
 		nrtb := NumRttsToBdpAllSS(bdp)
-		numRounds_min := NumRttsToBdpNoSS(bdp)
+		numRounds_min := NumRttsToBdp(minSsthresh, bdp)
 
 		goal := 0.9
 		// numRounds * (1-goal) = nrtb
