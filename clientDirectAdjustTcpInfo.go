@@ -81,22 +81,19 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\n", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, (bandwidthBytesSec*8)/(1000), rtt_us/1000)
 
-		multiplier := 2.0
-		bdp := multiplier * bandwidthBytesSec * rtt_us / 1000000
+		//multiplier := 2.0
+		bdp := bandwidthBytesSec * rtt_us / 1000000
 
 		// BW = cwnd/rtt => rtt * BW = cwnd
 		avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
 		minSsthresh := avg_cwnd * 3 / 4
 
-		nrtb := NumRttsToBdpAllSS(bdp)
-		numRounds_min := NumRttsToBdp(minSsthresh, (bdp/multiplier)/0.75)
+		numRoundsToBdp := NumRttsToBdp(minSsthresh, bdp)
+		numRoundsToDouble := bandwidthBytesSec/1500
+                 
 
-		goal := 0.9
-		// numRounds * (1-goal) = nrtb
-		numRounds := math.Max(nrtb/(1.0-goal), numRounds_min)
-
-		chunkSize = int(numRounds * bdp)
-		fmt.Println("bdp=", bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize, " minSsthresh=", minSsthresh, " nr_min=", numRounds_min)
+		chunkSize = int(numRoundsToBdp*2+numRoundsToDouble*1.5*bdp)
+		fmt.Println("bdp=", bdp, " numRoundsToBdp=", numRoundsToBdp, " NumRoundsToDoube=",numRoundsToDouble, "chunkSize=", chunkSize, " minSsthresh=", minSsthresh)
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 
 	}
