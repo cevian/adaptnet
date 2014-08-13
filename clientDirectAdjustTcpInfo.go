@@ -89,14 +89,14 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		minSsthresh := avg_cwnd * 3 / 4
 
 		nrtb := NumRttsToBdpAllSS(bdp)
-		numRounds_min := NumRttsToBdp(minSsthresh, bdp)
+		numRounds_min := NumRttsToBdp(minSsthresh, (bdp/multiplier)/0.75)
 
 		goal := 0.9
 		// numRounds * (1-goal) = nrtb
 		numRounds := math.Max(nrtb/(1.0-goal), numRounds_min)
 
 		chunkSize = int(numRounds * bdp)
-		fmt.Println("bdp=", bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize)
+		fmt.Println("bdp=", bdp, " nrtb=", nrtb, " numRounds=", numRounds, " chunkSize=", chunkSize, " minSsthresh=", minSsthresh, " nr_min=", numRounds_min)
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 
 	}

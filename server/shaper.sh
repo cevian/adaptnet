@@ -114,7 +114,7 @@ startDelay() {
 }
 
 startRateLimit() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 60kbit latency 1000ms peakrate 6mbit mtu 2000
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 60kbit latency 200ms peakrate 6mbit mtu 2000
 }
 
 
