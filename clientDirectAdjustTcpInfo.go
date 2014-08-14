@@ -67,7 +67,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	fd := f.Fd()
 	var tcp_info syscall.TCPInfo
 	GetTcpInfo(fd, &tcp_info)
-	fmt.Printf("tcp_info %+v \n", tcp_info)
+	//fmt.Printf("tcp_info %+v \n", tcp_info)
 
 	chunkSize := (235 * 1000 * 4) / 8
 	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
@@ -78,16 +78,17 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		bandwidthBytesSec := float64(chunkSize) / tookSec
 
 		GetTcpInfo(fd, &tcp_info)
-		fmt.Printf("tcp_info %+v \n", tcp_info)
+		//fmt.Printf("tcp_info %+v \n", tcp_info)
 		rtt_us := float64(tcp_info.Rtt)
 
-		fmt.Printf("%d\t%d\t%E\t%E\t%d\t%E\n", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, int((bandwidthBytesSec*8)/(1000)), rtt_us/1000)
+		fmt.Printf("%d\t%d\t%E\t%E\t%d\t%E\t", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, int((bandwidthBytesSec*8)/(1000)), rtt_us/1000)
+		//output continues below
 
 		max_rle := cs.MaxRateLogEntry()
 		max_bw := float64(max_rle.Bytes) / (float64(max_rle.Time) / float64(time.Second)) //bytes a second
 		max_bw = math.Min(cs.QuantileBandwidth(90), bandwidthBytesSec*2)
 		max_bw = cs.QuantileBandwidth(90)
-               
+
 		max_bdp := max_bw * rtt_us / 1000000
 
 		if max_bw < bandwidthBytesSec {
@@ -108,7 +109,9 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		numRounds := numRoundsToBdp * 10
 		chunkSize = int(numRounds * max_bdp)
 
-		fmt.Println("cs", chunkSize, "max_bw", int(max_bw), "(", int(max_bw*8.0/1000.0), ") max_bdp", max_bdp, "minSsthresh", minSsthresh, "nrtb", numRoundsToBdp, "nr", numRounds)
+		fmt.Printf("%d\t%d\t%d\t%d\n", int(max_bw), int(max_bdp), int(minSsthresh), int(numRounds))
+
+		//fmt.Println("cs", chunkSize, "max_bw", int(max_bw), "(", int(max_bw*8.0/1000.0), ") max_bdp", max_bdp, "minSsthresh", minSsthresh, "nrtb", numRoundsToBdp, "nr", numRounds)
 
 		//multiplier := 2.0
 		/*bdp := bandwidthBytesSec * rtt_us / 1000000
