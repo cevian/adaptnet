@@ -33,17 +33,26 @@ func (t *ChunkSender) Client() *netchan.Client {
 	return t.client
 }
 
-func (t *ChunkSender) MaxRateLogEntry() *netchan.RateLog {
-	var max *netchan.RateLog
-	maxRate := 0.0
+func (t *ChunkSender) AvgBandwidth() float64 {
+	sum := 0.0
 	for _, rle := range t.RateLog {
+		rate := float64(rle.Bytes) / (float64(rle.Time) / float64(time.Second))
+		sum += rate
+	}
+	return sum / float64(len(t.RateLog))
+}
+
+func (t *ChunkSender) MaxRateLogEntry() *netchan.RateLog {
+	var max int
+	maxRate := 0.0
+	for i, rle := range t.RateLog {
 		rate := float64(rle.Bytes) / float64(rle.Time)
 		if rate > maxRate {
-			max = &rle
+			max = i
 			maxRate = rate
 		}
 	}
-	return max
+	return &t.RateLog[max]
 }
 
 func (t *ChunkSender) Close() {
