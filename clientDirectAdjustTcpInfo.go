@@ -85,6 +85,9 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		max_rle := cs.MaxRateLogEntry()
 		max_bw := float64(max_rle.Bytes) / (float64(max_rle.Time) / float64(time.Second)) //bytes a second
+		max_bw = math.Min(cs.QuantileBandwidth(90), bandwidthBytesSec*2)
+		max_bw = cs.QuantileBandwidth(90)
+               
 		max_bdp := max_bw * rtt_us / 1000000
 
 		if max_bw < bandwidthBytesSec {
