@@ -14,6 +14,7 @@ cat /proc/net/tcpprobe > $DATADIR/server.tcpprobe &
 TCPCAP=$!
 #sudo tcpdump -i eth0 -w ../data/$1/tcpdump tcp and port 3000 &
 #TCPD=$!
+echo "Starting Server"
 ./server -addr 0.0.0.0:$PORT $SERVERARGS 2>&1 | tee $DATADIR/server.out
 echo "Server pid is $!" 
 sudo kill $TCPCAP
