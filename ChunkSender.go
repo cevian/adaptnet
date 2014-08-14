@@ -53,11 +53,12 @@ func (t *ChunkSender) QuantileBandwidth(quantile int) float64 {
 
 	sort.Float64s(rates)
 
-	index_ceil := int(math.Ceil(float64(quantile) / 100.0 * float64(len(rates))))
+	index := (float64(quantile) / 100.0) * float64(len(rates)-1)
+	index_ceil := int(math.Ceil(index))
 	if len(rates)-1 < index_ceil {
 		return rates[len(rates)-1]
 	}
-	index_floor := int(math.Floor(float64(quantile) / 100.0 * float64(len(rates))))
+	index_floor := int(math.Floor(index))
 	return (rates[index_ceil] + rates[index_floor]) / 2.0
 }
 
