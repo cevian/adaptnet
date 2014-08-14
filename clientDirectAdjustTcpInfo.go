@@ -50,7 +50,7 @@ func NumRttsToBdp(ssthresh, bdp float64) (rounds float64) {
 	//startingByte := math.Exp2(toSSthresh - 1.0)*15000.0
 	startingByte := ssthresh
 	left := bdp - startingByte
-        //fmt.Println("ssthresh", toSSthresh, "left", left, left/1500, "ssthresh", ssthresh, "bdp", bdp, math.Exp2(toSSthresh - 1.0)*15000.0, math.Exp2(toSSthresh - 2.0)*15000.0)
+	//fmt.Println("ssthresh", toSSthresh, "left", left, left/1500, "ssthresh", ssthresh, "bdp", bdp, math.Exp2(toSSthresh - 1.0)*15000.0, math.Exp2(toSSthresh - 2.0)*15000.0)
 	return math.Ceil(left/1500) + toSSthresh
 }
 
@@ -87,16 +87,25 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		max_bw := float64(max_rle.Bytes) / (float64(max_rle.Time) / float64(time.Second)) //bytes a second
 		max_bdp := max_bw * rtt_us / 1000000
 
+		if max_bw < bandwidthBytesSec {
+			fmt.Println("max bw lower than avg bw, shouldnt happen", max_bw, bandwidthBytesSec)
+			for _, rle := range cs.RateLog {
+				rate := float64(rle.Bytes) / (float64(rle.Time) / float64(time.Second))
+				fmt.Println("Entry:", rle.Bytes, rle.Time, rate)
+			}
+			panic("snh")
+		}
+
 		//avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
 		//avg_bdp := avg_cwnd
 		//minSsthresh := math.Max(avg_cwnd, max_bdp*3/4)
-		minSsthresh := max_bdp*3/4
+		minSsthresh := max_bdp * 3 / 4
 
 		numRoundsToBdp := NumRttsToBdp(minSsthresh, max_bdp)
-		numRounds := numRoundsToBdp*10
+		numRounds := numRoundsToBdp * 10
 		chunkSize = int(numRounds * max_bdp)
 
-		fmt.Println("cs", chunkSize, "max_bw", int(max_bw), "(", int(max_bw*8.0/1000.0) ,") max_bdp", max_bdp, "minSsthresh", minSsthresh, "nrtb", numRoundsToBdp, "nr", numRounds)
+		fmt.Println("cs", chunkSize, "max_bw", int(max_bw), "(", int(max_bw*8.0/1000.0), ") max_bdp", max_bdp, "minSsthresh", minSsthresh, "nrtb", numRoundsToBdp, "nr", numRounds)
 
 		//multiplier := 2.0
 		/*bdp := bandwidthBytesSec * rtt_us / 1000000
