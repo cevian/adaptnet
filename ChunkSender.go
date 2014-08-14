@@ -1,6 +1,8 @@
 package adaptnet
 
 import (
+	"math"
+	"sort"
 	"time"
 
 	"github.com/cevian/adaptnet/netchan"
@@ -40,6 +42,22 @@ func (t *ChunkSender) AvgBandwidth() float64 {
 		sum += rate
 	}
 	return sum / float64(len(t.RateLog))
+}
+
+func (t *ChunkSender) QuantileBandwidth(quantile int) float64 {
+	rates := make([]float64, len(t.RateLog))
+	for i, rle := range t.RateLog {
+		rate := float64(rle.Bytes) / (float64(rle.Time) / float64(time.Second))
+		rates[i] = rate
+	}
+
+	sort.Float64s(rates)
+
+	index := int(math.Floor(float64(quantile) / 100.0 * float64(len(rates))))
+	if len(rates)-1 < index {
+		return rates[len(rates)-1]
+	}
+	return rates[index]
 }
 
 func (t *ChunkSender) MaxRateLogEntry() *netchan.RateLog {
