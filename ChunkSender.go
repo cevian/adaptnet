@@ -53,11 +53,12 @@ func (t *ChunkSender) QuantileBandwidth(quantile int) float64 {
 
 	sort.Float64s(rates)
 
-	index := int(math.Floor(float64(quantile) / 100.0 * float64(len(rates))))
-	if len(rates)-1 < index {
+	index_ceil := int(math.Ceil(float64(quantile) / 100.0 * float64(len(rates))))
+	if len(rates)-1 < index_ceil {
 		return rates[len(rates)-1]
 	}
-	return rates[index]
+	index_floor := int(math.Floor(float64(quantile) / 100.0 * float64(len(rates))))
+	return (rates[index_ceil] + rates[index_floor]) / 2.0
 }
 
 func (t *ChunkSender) MaxRateLogEntry() *netchan.RateLog {
