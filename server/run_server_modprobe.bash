@@ -3,9 +3,9 @@
 # arg2: port 
 # rest passed to script
 EXPNAME=$1
-PORT=$2
+PORT=${2:-3000}
 SERVERARGS="${@:3}"
-DATADIR=../data/$EXPNAME
+DATADIR=../data/server.$EXPNAME
 
 mkdir -p $DATADIR
 sudo modprobe tcp_probe port=$PORT full=1

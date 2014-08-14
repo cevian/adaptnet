@@ -17,10 +17,8 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	runner := stream.NewRunner()
-
-	fmt.Println("Adaptnet", adaptnet.NumRttsToBdp(127833.0, 170444.0))
-
-	clientOp := adaptnet.NewClientDirectAdjustTcpInfoOp(*addr, *msBetweenChunks, *numChunks)
+	
+        clientOp := adaptnet.NewClientDirectAdjustTcpInfoOp(*addr, *msBetweenChunks, *numChunks)
 	runner.Add(clientOp)
 	runner.AsyncRunAll()
 	runner.Wait()
