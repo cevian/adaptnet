@@ -8,15 +8,15 @@ wait
 echo "finished"
 }
 
-rates=(1 5 10 15 20 25 30 35 40 45 50) #mb
+rates=(250 500 750 1000 1250 1500 1750 2000 5000 10000 15000 20000 30000)
 propLat=(50)
 
 for lat in ${propLat[*]}
 do
   for rate in ${rates[*]}
   do
-    ratebyte=$(($rate*1000*1000))
-    echo "rate (MB)" $rate ", ratebyte=" $ratebyte ", latency " $lat
+    ratebyte=$(($rate*1000))
+    echo "rate (KB)" $rate ", ratebyte=" $ratebyte ", latency " $lat
     runint $1.prop.$lat.chunk.$ratebyte.pause.0 $ratebyte 0 10
     runint $1.prop.$lat.chunk.$ratebyte.pause.5000 $ratebyte 5000 10
   done
