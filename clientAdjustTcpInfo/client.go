@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"runtime"
-	"fmt"
 	"github.com/cevian/adaptnet"
 	"github.com/cevian/go-stream/stream"
 )
