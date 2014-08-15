@@ -44,6 +44,13 @@ func (t *ChunkSender) AvgBandwidth() float64 {
 	return sum / float64(len(t.RateLog))
 }
 
+func (t *ChunkSender) LastBandwidth() float64 {
+	sum := 0.0
+	rle := t.RateLog[len(t.RateLog)-2]
+	rate := float64(rle.Bytes) / (float64(rle.Time) / float64(time.Second))
+	return rate
+}
+
 func (t *ChunkSender) QuantileBandwidth(quantile int) float64 {
 	rates := make([]float64, len(t.RateLog))
 	for i, rle := range t.RateLog {
