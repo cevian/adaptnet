@@ -45,7 +45,6 @@ func (t *ChunkSender) AvgBandwidth() float64 {
 }
 
 func (t *ChunkSender) LastBandwidth() float64 {
-	sum := 0.0
 	rle := t.RateLog[len(t.RateLog)-2]
 	rate := float64(rle.Bytes) / (float64(rle.Time) / float64(time.Second))
 	return rate

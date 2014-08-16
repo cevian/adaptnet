@@ -79,7 +79,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		GetTcpInfo(fd, &tcp_info)
 		//fmt.Printf("tcp_info %+v \n", tcp_info)
-		rtt_us := float64(tcp_info.Rtt)
+		rtt_us := float64(tcp_info.Rcv_rtt)
 
 		fmt.Printf("%d\t%d\t%E\t%E\t%d\t%E\t", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, int((bandwidthBytesSec*8)/(1000)), rtt_us/1000)
 		//output continues below
@@ -89,7 +89,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		max_bw = math.Min(cs.QuantileBandwidth(90), bandwidthBytesSec*2)
 		max_bw = cs.QuantileBandwidth(90)
 
-		max_bdp := max_bw * rtt_us / 1000000
+		max_bdp := max_bw * (rtt_us / 1000000)
 
 		if max_bw < bandwidthBytesSec {
 			fmt.Println("max bw lower than avg bw, shouldnt happen", max_bw, bandwidthBytesSec)
@@ -103,8 +103,9 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		//avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
 		//avg_bdp := avg_cwnd
 		//minSsthresh := math.Max(avg_cwnd, max_bdp*3/4)
-		last_bdp := cs.LastBandwidth() * rtt_us / 1000000
-		minSsthresh := last_bdp * 3 / 4
+		//last_bdp := cs.LastBandwidth() * rtt_us / 1000000
+		//minSsthresh := last_bdp * 3 / 4
+		minSsthresh := max_bdp * 3 / 4
 
 		numRoundsToBdp := NumRttsToBdp(minSsthresh, max_bdp)
 		numRounds := numRoundsToBdp * 10
