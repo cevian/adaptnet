@@ -116,7 +116,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 
 		numRoundsToBdp := NumRttsToBdp(minSsthresh, max_bdp)
 		numRounds := numRoundsToBdp * 10
-		avg_bdp := rtt_us_smooth * cs.AvgBandwidth()
+		avg_bdp := (rtt_us_smooth / 1000000) * cs.AvgBandwidth()
 		chunkSize = int(numRounds * avg_bdp)
 
 		fmt.Printf("%d\t%d\t%d\t%d\t%d\n", int(max_bw*8.0/1000.0), int(max_bdp), int(minSsthresh), int(numRounds), int(chunkSize/1000000))
