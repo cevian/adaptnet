@@ -70,6 +70,7 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 	//fmt.Printf("tcp_info %+v \n", tcp_info)
 
 	chunkSize := (235 * 1000 * 4) / 8
+	rtt_us_smooth := 0.0
 	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
 		start := cs.MakeRequest(chunkSize)
 
@@ -80,6 +81,12 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		GetTcpInfo(fd, &tcp_info)
 		//fmt.Printf("tcp_info %+v \n", tcp_info)
 		rtt_us := float64(tcp_info.Rcv_rtt)
+		if rtt_us_smooth == 0.0 {
+			rtt_us_smooth = rtt_us
+		} else {
+			alpha := 0.5
+			rtt_us_smooth = ((1 - alpha) * rtt_us_smooth) + (alpha * rtt_us)
+		}
 
 		fmt.Printf("%d\t%d\t%E\t%E\t%d\t%E\t", t.timeBetweenChunksMs, chunkSize, float64(took), bandwidthBytesSec, int((bandwidthBytesSec*8)/(1000)), rtt_us/1000)
 		//output continues below
@@ -103,13 +110,14 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		//avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
 		//avg_bdp := avg_cwnd
 		//minSsthresh := math.Max(avg_cwnd, max_bdp*3/4)
-		//last_bdp := cs.LastBandwidth() * rtt_us / 1000000
-		//minSsthresh := last_bdp * 3 / 4
-		minSsthresh := max_bdp * 3 / 4
+		last_bdp := cs.LastBandwidth() * rtt_us / 1000000
+		minSsthresh := last_bdp * 3 / 4
+		//minSsthresh := max_bdp * 3 / 4
 
 		numRoundsToBdp := NumRttsToBdp(minSsthresh, max_bdp)
 		numRounds := numRoundsToBdp * 10
-		chunkSize = int(numRounds * max_bdp)
+		avg_bdp := rtt_us_smooth * cs.AvgBandwidth()
+		chunkSize = int(numRounds * avg_bdp)
 
 		fmt.Printf("%d\t%d\t%d\t%d\t%d\n", int(max_bw*8.0/1000.0), int(max_bdp), int(minSsthresh), int(numRounds), int(chunkSize/1000000))
 
