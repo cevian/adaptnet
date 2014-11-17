@@ -100,6 +100,15 @@ startPre(){
     $TC qdisc add dev $IF root handle 1: prio
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport $PORT 0xffff flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3001 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3002 0xffff flowid 1:1
+    
+    #for the socks proxy
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3010 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3011 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3012 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3013 0xffff flowid 1:1
+    #$TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dst 10.10.0.0/24 flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dst 192.168.1.107/24 flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip protocol 1 0xFF flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 2 u32 match ip src 0/0 flowid 1:2
 }
@@ -110,11 +119,20 @@ startCombine() {
 }
 
 startDelay() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay ${LATENCY}ms ${JITTER}ms
+    $TC qdisc add dev $IF parent 1:1 handle 10: netem delay ${LATENCY}ms ${JITTER}ms limit 100000
 }
 
 startRateLimit() {
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 60kbit latency 500ms peakrate 6mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit latency 1000ms peakrate 4.5mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 500ms peakrate 2.5mbit mtu 2000
+    
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit latency 400ms peakrate 4.5mbit mtu 2000
+    
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 400ms peakrate 4.5mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 1000ms peakrate 2.5mbit mtu 2000
+    
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 120kbit latency 800ms peakrate 6mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 3mbit burst 60kbit latency 1000ms peakrate 3.5mbit mtu 2000
 }
 
 

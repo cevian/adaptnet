@@ -110,9 +110,9 @@ func (t *ClientDirectAdjustTcpInfoOp) Run() error {
 		//avg_cwnd := bandwidthBytesSec * rtt_us / 1000000
 		//avg_bdp := avg_cwnd
 		//minSsthresh := math.Max(avg_cwnd, max_bdp*3/4)
-		last_bdp := cs.LastBandwidth() * rtt_us / 1000000
-		minSsthresh := last_bdp * 3 / 4
-		//minSsthresh := max_bdp * 3 / 4
+		//last_bdp := cs.LastBandwidth() * rtt_us / 1000000
+		//minSsthresh := last_bdp * 3 / 4
+		minSsthresh := max_bdp * 3 / 4
 
 		numRoundsToBdp := NumRttsToBdp(minSsthresh, max_bdp)
 		numRounds := numRoundsToBdp * 10

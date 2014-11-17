@@ -9,7 +9,7 @@ sudo sh -c "echo 1 > /proc/sys/net/ipv4/tcp_no_metrics_save"
 mkdir $EXPDIR
 echo $CONGCONT > $EXPDIR/congcont
 
-rates=(250 500 750 1000 1250 1500 1750 2000 5000 10000 15000 20000 30000)
+rates=(50 100 150 200 250 500 750 1000 1250 1500 1750 2000 5000 10000 20000 30000 40000 50000 60000 70000)
 propLat=(50)
 
 for lat in ${propLat[*]}
