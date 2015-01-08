@@ -44,7 +44,7 @@ func (t *ClientHttpOp) Run() error {
 		bandwidthBytesSec := float64(t.bytesPerChunk) / tookSec
 		sumBandwidthBytesSec += bandwidthBytesSec
 
-		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\t%d\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBytesSec, bandwidthBytesSec*8, start.UnixNano(), 8*sumBandwidthBytesSec/float64(chunkNo+1))
+		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%d\t%E\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBytesSec, bandwidthBytesSec*8, start.UnixNano(), 8*sumBandwidthBytesSec/float64(chunkNo+1))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
 
