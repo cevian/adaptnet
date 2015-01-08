@@ -35,6 +35,7 @@ func (t *ClientDirectOp) Run() error {
 
 	//response := make([]byte, 100)
 	response := make([]byte, 10*1024*1024) //10Mb
+        bandwidthBytesSecSum := float64(0)
 	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
 		r := &Request{int32(t.bytesPerChunk)}
 		b, err := SerializeObject(r)
@@ -62,9 +63,10 @@ func (t *ClientDirectOp) Run() error {
 		}
 
 		tookSec := float64(float64(took) / float64(time.Second))
-		bandwidthBitsSec := float64(t.bytesPerChunk) / tookSec
+		bandwidthBytesSec := float64(t.bytesPerChunk) / tookSec
+		bandwidthBytesSecSum += bandwidthBytesSec
 
-		fmt.Printf("%d\t%d\t%E\t%E\t%E\t%E\t%d\n", t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBitsSec, bandwidthBitsSec/(1024*1024), float64(tookInternal), start.UnixNano())
+		fmt.Printf("%d\t%d\t%d\t%E\t%E\t%E\t%E\t%d\t%E\n", chunkNo, t.timeBetweenChunksMs, t.bytesPerChunk, float64(took), bandwidthBytesSec, bandwidthBytesSec/(1024*1024), float64(tookInternal), start.UnixNano(), 8.0*bandwidthBytesSecSum/float64(chunkNo+1))
 		time.Sleep(time.Millisecond * time.Duration(t.timeBetweenChunksMs))
 	}
 	return nil

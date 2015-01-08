@@ -62,8 +62,6 @@ fi
 
 # Name of the traffic control command.
 TC=/sbin/tc
-#egress port to shape
-PORT=3000
 # Rate to throttle to
 RATE=2.5mbit
 # Peak rate to allow
@@ -98,9 +96,21 @@ MODEMQ=0ms
 
 startPre(){
     $TC qdisc add dev $IF root handle 1: prio
-    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport $PORT 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3000 0xffff flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3001 0xffff flowid 1:1
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3002 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3003 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3004 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3005 0xffff flowid 1:1
+
+
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3000 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3001 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3002 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3003 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3004 0xffff flowid 1:1
+    $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip dport 3005 0xffff flowid 1:1
+
     
     #for the socks proxy
     $TC filter add dev $IF protocol ip parent 1: prio 1 u32 match ip sport 3010 0xffff flowid 1:1
@@ -122,6 +132,10 @@ startDelay() {
     $TC qdisc add dev $IF parent 1:1 handle 10: netem delay ${LATENCY}ms ${JITTER}ms limit 100000
 }
 
+startDelayOnly() {
+    $TC qdisc add dev $IF root handle 1: netem delay 15ms 0ms limit 100000
+
+}
 startRateLimit() {
     #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit latency 1000ms peakrate 4.5mbit mtu 2000
     #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 500ms peakrate 2.5mbit mtu 2000
@@ -131,8 +145,30 @@ startRateLimit() {
     #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 400ms peakrate 4.5mbit mtu 2000
     #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit latency 1000ms peakrate 2.5mbit mtu 2000
     
-    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 120kbit latency 800ms peakrate 6mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 5mbit burst 120kbit latency 800ms peakrate 6mbit mtu 2000
     #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 3mbit burst 60kbit latency 1000ms peakrate 3.5mbit mtu 2000
+    
+
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit limit 256k peakrate 4.5mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 2mbit burst 60kbit limit 256k peakrate 2.5mbit mtu 2000
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit limit 256k  
+    #$TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 120kbit limit 256k  
+    $TC qdisc add dev $IF parent 1:1 handle 10: tbf rate 4mbit burst 60kbit limit 256k peakrate 5mbit mtu 1600 
+}
+
+startRateLimitNetem() {
+    #LATENCY=400
+    #RATE=4
+    #MTU=1500
+    #((LIMIT= (((RATE*1024*1024)/8)*LATENCY/1000)/MTU))
+    # echo -n "Starting netem shaping (Latency=$LATENCY RATE=$RATE Limit=$LIMIT): "
+    #$TC qdisc add dev $IF parent 1:1 handle 10: netem rate ${RATE}mbit limit $LIMIT
+    ((LIMIT= 256000/1500))
+    #$TC qdisc add dev $IF parent 1:1 handle 10: netem rate 2mbit limit $LIMIT
+    #$TC qdisc add dev $IF parent 1:1 handle 10: netem rate 2mbit limit $LIMIT delay 20ms loss random 0.003%
+    #$TC qdisc add dev $IF parent 1:1 handle 10: netem rate 4mbit limit $LIMIT delay 20ms loss random 0.03%
+    #$TC qdisc add dev $IF parent 1:1 handle 10: netem rate 4mbit limit $LIMIT delay 20ms loss gemodel 0.3%
+    $TC qdisc add dev $IF parent 1:1 handle 10: netem rate 4mbit limit $LIMIT delay 20ms
 }
 
 
@@ -172,6 +208,18 @@ done
 echo "done"
 ;;
 
+startRateLimitNetem)
+
+echo -n "Starting rate limit bandwidth shaping: "
+for IF in ${IFS[*]} 
+do
+  startPre
+  startRateLimitNetem
+done
+echo "done"
+;;
+
+
 startDelay)
 LATENCY=${4:-800}
 JITTER=${5:-0}
@@ -183,6 +231,18 @@ do
 done
 echo "done"
 ;;
+
+startDelayOnly)
+echo -n "Starting latency shaping only: "
+for IF in ${IFS[*]} 
+do
+  startDelayOnly
+done
+echo "done"
+;;
+
+
+
 
 
 

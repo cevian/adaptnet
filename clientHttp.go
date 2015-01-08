@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"io/ioutil"
 )
 
 type ClientHttpOp struct {
@@ -26,18 +27,26 @@ func (t *ClientHttpOp) Run() error {
 	sumBandwidthBytesSec := float64(0)
 	for chunkNo := 0; chunkNo < t.numChunks; chunkNo++ {
 		startByte := chunkNo * t.bytesPerChunk
-		endByte := (chunkNo + 1) * t.bytesPerChunk
+		endByte := (chunkNo + 1) * t.bytesPerChunk - 1
 
 		start := time.Now()
 
-		req, err := http.NewRequest("GET", "http://example.com", nil)
-		req.Header.Add("Range", fmt.Sprintf("%d-%d", startByte, endByte))
-		resp, err := client.Do(req)
-		resp.Body.Close()
-
+		req, err := http.NewRequest("GET", t.url, nil)
 		if err != nil {
 			panic(err)
 		}
+		req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", startByte, endByte))
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+                }
+		_, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+                }
+
+		resp.Body.Close()
+
 		took := time.Since(start)
 		tookSec := float64(float64(took) / float64(time.Second))
 
