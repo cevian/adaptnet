@@ -8,7 +8,7 @@ import (
 	"github.com/cevian/go-stream/stream"
 )
 
-var url = flag.String("url", "http://23.239.15.186/app/video/sita/sita.3000_dashinit.mo4", "Url")
+var url = flag.String("url", "http://23.239.15.186/app/video/sita/sita.3000_dashinit.mp4", "Url")
 var bitsPerChunk = flag.Int("bytesPerChunk", 375000, "")
 var msBetweenChunks = flag.Int("msBetweenChunks", 0, "")
 var numChunks = flag.Int("numChunks", 100, "")

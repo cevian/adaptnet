@@ -12,11 +12,12 @@ sudo modprobe tcp_probe port=$PORT full=1
 sudo chmod 444 /proc/net/tcpprobe
 cat /proc/net/tcpprobe > $DATADIR/server.tcpprobe &
 TCPCAP=$!
+echo "Server cat pid is $TCPCAP" 
 #sudo tcpdump -i eth0 -w ../data/$1/tcpdump tcp and port 3000 &
 #TCPD=$!
 echo "Starting Server"
 ./server -addr 0.0.0.0:$PORT $SERVERARGS 2>&1 | tee $DATADIR/server.out
-echo "Server pid is $!" 
+#server will die whel client is done. It is not in background so won't fill $!
 sudo kill $TCPCAP
 #sleep 10
 #sudo kill $TCPD

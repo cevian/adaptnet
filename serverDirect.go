@@ -92,9 +92,10 @@ func (t *ServerDirectOp) Run() error {
 
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
-
+	
 	pg := NewPayloadGen(t.maxPayload)
 	for i := 0; i < t.numConnections; i++ {
+		fmt.Println("Waiting for connection");
 		cp := <-newConnCh
 		connNo := i
 		wg.Add(1)
